@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="intro">
+	<p class="lede">I design and build software projects. I like simple, fast, and thoughtfully crafted things.</p>
+	<p>Below are a few selected projects. For more, reach out or see my code.</p>
+</section>
+
+<section id="projects" class="projects">
+	<h2>Projects</h2>
+	<ul class="project-list">
+		{% for project in projects %}
+		<li class="project-card">
+			<div class="project-meta">
+				<span class="project-year">{{ project.year }}</span>
+				{% if project.tags %}
+				<span class="project-tags">{{ project.tags | join(', ') }}</span>
+				{% endif %}
+			</div>
+			<h3 class="project-title">
+				{% if project.links and project.links[0].url %}
+					<a href="{{ project.links[0].url }}" target="_blank" rel="noopener noreferrer">{{ project.title }}</a>
+				{% else %}
+					{{ project.title }}
+				{% endif %}
+			</h3>
+			<p class="project-description">{{ project.description }}</p>
+			{% if project.links %}
+				<div class="project-links">
+					{% for link in project.links %}
+						<a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
+					{% endfor %}
+				</div>
+			{% endif %}
+		</li>
+		{% endfor %}
+	</ul>
+</section>
+{% endblock %}
+
