@@ -42,3 +42,20 @@ Restart the server after changes if needed.
 ## License
 
 MIT
+
+## Alternative run methods
+
+Docker (no local Python needed):
+
+```bash
+docker build -t portfolio:latest .
+docker run --rm -p 8000:8000 portfolio:latest
+```
+
+Or use the helper script:
+
+```bash
+./run.sh dev        # Flask dev server
+./run.sh gunicorn   # Production server
+./run.sh docker     # Build and run with Docker
+```
