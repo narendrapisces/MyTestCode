@@ -1,0 +1,33 @@
+[
+	{
+		"title": "Minimal Portfolio Site",
+		"slug": "minimal-portfolio",
+		"description": "A lightweight, fast portfolio built with Flask, Jinja, and simple CSS.",
+		"year": 2025,
+		"tags": ["python", "flask", "jinja"],
+		"links": [
+			{ "label": "Source", "url": "https://github.com/yourname/minimal-portfolio" }
+		]
+	},
+	{
+		"title": "Project Atlas",
+		"slug": "project-atlas",
+		"description": "Data exploration tool with clean UI and responsive visualizations.",
+		"year": 2024,
+		"tags": ["data", "visualization"],
+		"links": [
+			{ "label": "Demo", "url": "https://example.com/atlas" }
+		]
+	},
+	{
+		"title": "TaskFlow",
+		"slug": "taskflow",
+		"description": "Simple task management that focuses on flow, not features.",
+		"year": 2023,
+		"tags": ["productivity", "webapp"],
+		"links": [
+			{ "label": "Website", "url": "https://example.com/taskflow" }
+		]
+	}
+]
+
