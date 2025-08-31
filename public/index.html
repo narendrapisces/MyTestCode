@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Online Tic-Tac-Toe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0f172a; --panel:#111827; --card:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --accent:#22d3ee; }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body { margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background: linear-gradient(180deg, #0f172a, #0b1220); color: var(--text); display: flex; align-items: center; justify-content: center; }
+        .container { width: 100%; max-width: 960px; padding: 24px; }
+        .panel { background: rgba(31, 41, 55, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        h1 { margin: 0 0 12px; font-size: 28px; letter-spacing: 0.2px; }
+        .muted { color: var(--muted); }
+        .grid { display: grid; grid-template-columns: repeat(3, 120px); grid-template-rows: repeat(3, 120px); gap: 12px; justify-content: center; margin: 18px auto; }
+        .cell { display: flex; align-items: center; justify-content: center; background: rgba(17,24,39,0.9); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-size: 52px; font-weight: 600; cursor: pointer; transition: transform 120ms ease, background 120ms ease; user-select: none; }
+        .cell:hover { transform: translateY(-2px); background: rgba(17,24,39,0.95); }
+        .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .row + .row { margin-top: 12px; }
+        input, button { height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(17,24,39,0.8); color: var(--text); padding: 0 12px; font-size: 14px; }
+        input::placeholder { color: #94a3b8; }
+        button { cursor: pointer; background: linear-gradient(180deg, #1f2937, #111827); transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease; }
+        button:hover { transform: translateY(-1px); background: linear-gradient(180deg, #374151, #111827); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        .tag { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); background: rgba(17,24,39,0.6); }
+        .accent { color: var(--accent); }
+        .footer { text-align: center; margin-top: 12px; font-size: 12px; color: var(--muted); }
+        .bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .state { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .boardWrap { display: flex; flex-direction: column; align-items: center; }
+        .hidden { display: none; }
+        .error { color: #fca5a5; }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let roomId = null;
+        let mySymbol = null;
+        let state = { board: Array(9).fill(null), turn: 'X', status: 'waiting', winner: null, players: {} };
+
+        function $(id){ return document.getElementById(id); }
+        function render(){
+            for(let i=0;i<9;i++){
+                const v = state.board[i];
+                const el = $("c"+i);
+                el.textContent = v || '';
+                el.style.pointerEvents = (state.status === 'playing' && state.turn === mySymbol && !v) ? 'auto' : 'none';
+            }
+            $("turn").textContent = state.status === 'finished' ? 'Game Over' : `Turn: ${state.turn}`;
+            $("me").textContent = mySymbol ? `You: ${mySymbol}` : 'You: -';
+            $("rid").textContent = roomId ? `Room: ${roomId}` : 'Room: -';
+            $("status").textContent = state.status;
+            if (state.status === 'finished') {
+                if (state.winner === 'draw') $("result").textContent = 'Draw!';
+                else $("result").textContent = state.winner + ' wins!';
+            } else {
+                $("result").textContent = '';
+            }
+        }
+
+        function move(i){
+            if (!roomId) return;
+            socket.emit('move', { roomId, index: i });
+        }
+
+        socket.on('state', (s)=>{ state = s; render(); });
+        socket.on('roomCreated', ({ roomId: r, symbol })=>{ roomId=r; mySymbol=symbol; render(); });
+        socket.on('joined', ({ roomId: r, symbol })=>{ roomId=r; mySymbol=symbol; render(); });
+        socket.on('errorMessage', (msg)=>{ $("err").textContent = msg; setTimeout(()=> $("err").textContent='', 3000); });
+
+        window.createRoom = function(){
+            const name = $("name").value.trim() || undefined;
+            socket.emit('create', { name });
+        }
+        window.joinRoom = function(){
+            const r = $("room").value.trim().toUpperCase();
+            if (!r) return;
+            const name = $("name").value.trim() || undefined;
+            socket.emit('join', { roomId: r, name });
+        }
+        window.restart = function(){ if (roomId) socket.emit('restart', { roomId }); }
+        window.leave = function(){ if (roomId) socket.emit('leave', { roomId }); roomId=null; mySymbol=null; state={ board:Array(9).fill(null), turn:'X', status:'waiting', winner:null, players:{} }; render(); }
+
+        window.addEventListener('DOMContentLoaded', ()=>{
+            render();
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <div class="bar">
+                <h1>Online Tic-Tac-Toe</h1>
+                <div class="tag"><span id="rid">Room: -</span><span id="me">You: -</span></div>
+            </div>
+            <div class="row">
+                <input id="name" placeholder="Your name (optional)" />
+                <button onclick="createRoom()">Create Room</button>
+                <input id="room" placeholder="Enter Room ID to Join" />
+                <button onclick="joinRoom()">Join</button>
+                <button onclick="restart()">Restart</button>
+                <button onclick="leave()">Leave</button>
+                <span id="err" class="error"></span>
+            </div>
+            <div class="bar" style="margin-top:8px">
+                <div class="state">
+                    <div class="tag"> <strong id="turn">Turn: X</strong> </div>
+                    <div class="tag"> Status: <span id="status" style="margin-left:6px">waiting</span> </div>
+                    <div class="tag accent" id="result"></div>
+                </div>
+            </div>
+            <div class="boardWrap">
+                <div class="grid">
+                    <div class="cell" id="c0" onclick="move(0)"></div>
+                    <div class="cell" id="c1" onclick="move(1)"></div>
+                    <div class="cell" id="c2" onclick="move(2)"></div>
+                    <div class="cell" id="c3" onclick="move(3)"></div>
+                    <div class="cell" id="c4" onclick="move(4)"></div>
+                    <div class="cell" id="c5" onclick="move(5)"></div>
+                    <div class="cell" id="c6" onclick="move(6)"></div>
+                    <div class="cell" id="c7" onclick="move(7)"></div>
+                    <div class="cell" id="c8" onclick="move(8)"></div>
+                </div>
+            </div>
+            <div class="footer">Share your Room ID with a friend to play online.</div>
+        </div>
+    </div>
+</body>
+</html>
+
