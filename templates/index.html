@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Image Upload</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <main class="container">
+      <h1>Image Upload</h1>
+
+      {% if error_message %}
+      <div class="alert">{{ error_message }}</div>
+      {% endif %}
+
+      <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="upload-form">
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Upload</button>
+      </form>
+
+      <section class="gallery">
+        {% if images %}
+          {% for filename in images %}
+            <a href="{{ url_for('uploaded_file', filename=filename) }}" target="_blank" class="thumb">
+              <img src="{{ url_for('uploaded_file', filename=filename) }}" alt="{{ filename }}">
+            </a>
+          {% endfor %}
+        {% else %}
+          <p class="muted">No images uploaded yet.</p>
+        {% endif %}
+      </section>
+    </main>
+  </body>
+  </html>
+
